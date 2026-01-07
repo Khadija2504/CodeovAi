@@ -1,6 +1,8 @@
 package codeovai.codeovai.controller;
 
+import codeovai.codeovai.model.CodeSummary;
 import codeovai.codeovai.model.SourceFile;
+import codeovai.codeovai.service.analyze.CodeSummarizationService;
 import codeovai.codeovai.service.upload.FileScannerService;
 import codeovai.codeovai.service.upload.SystemUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,9 @@ public class SystemAnalysisController {
     @Autowired
     private FileScannerService fileScannerService;
 
+    @Autowired
+    private CodeSummarizationService codeSummarizationService;
+
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> uploadFiles(@RequestParam("files") MultipartFile[] files) {
         if (files == null || files.length == 0) {
@@ -39,6 +44,7 @@ public class SystemAnalysisController {
 
             System.out.println("empty source files" + results);
 
+            CodeSummary codeSummary = null;
             for (MultipartFile file : files) {
                 String systemId = systemUploadService.uploadSystem(file);
                 System.out.println("systemId" + systemId);
@@ -48,12 +54,15 @@ public class SystemAnalysisController {
                 List<SourceFile> scannedFiles = fileScannerService.scanRelevantFiles(path);
                 System.out.println("scannedFiles" + scannedFiles);
                 results.addAll(scannedFiles);
+                codeSummary = codeSummarizationService.summarize(results, path);
+                System.out.println("codeSummary" + codeSummary);
             }
 
             if (results.size() == 1) {
                 return ResponseEntity.ok(results.get(0));
-            } else {
-                return ResponseEntity.ok(results);
+            }
+            else {
+                return ResponseEntity.ok(codeSummary);
             }
 
         } catch (Exception e) {
