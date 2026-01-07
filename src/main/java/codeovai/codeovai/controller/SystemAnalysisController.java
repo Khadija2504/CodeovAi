@@ -3,6 +3,7 @@ package codeovai.codeovai.controller;
 import codeovai.codeovai.model.CodeSummary;
 import codeovai.codeovai.model.SourceFile;
 import codeovai.codeovai.model.SystemContext;
+import codeovai.codeovai.service.ai.GeminiClientService;
 import codeovai.codeovai.service.ai.GeminiPromptService;
 import codeovai.codeovai.service.analyze.CodeSummarizationService;
 import codeovai.codeovai.service.analyze.SystemContextBuilderService;
@@ -35,6 +36,8 @@ public class SystemAnalysisController {
     private SystemContextBuilderService systemContextBuilderService;
     @Autowired
     private GeminiPromptService geminiPromptService;
+    @Autowired
+    private GeminiClientService geminiClientService;
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> uploadFiles(@RequestParam("files") MultipartFile[] files) {
@@ -71,12 +74,15 @@ public class SystemAnalysisController {
             String prompt = geminiPromptService.buildPrompt(systemContext);
 
             System.out.println("prompt :" + prompt);
+
+            String response = geminiClientService.generateExplanation(prompt);
+            System.out.println("response :" + response);
             if (results.size() == 1) {
                 return ResponseEntity.ok(results.get(0));
             }
             else {
 
-                return ResponseEntity.ok(prompt);
+                return ResponseEntity.ok(response);
             }
 
         } catch (Exception e) {
