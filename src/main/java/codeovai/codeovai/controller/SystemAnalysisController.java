@@ -2,7 +2,9 @@ package codeovai.codeovai.controller;
 
 import codeovai.codeovai.model.CodeSummary;
 import codeovai.codeovai.model.SourceFile;
+import codeovai.codeovai.model.SystemContext;
 import codeovai.codeovai.service.analyze.CodeSummarizationService;
+import codeovai.codeovai.service.analyze.SystemContextBuilderService;
 import codeovai.codeovai.service.upload.FileScannerService;
 import codeovai.codeovai.service.upload.SystemUploadService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +29,9 @@ public class SystemAnalysisController {
 
     @Autowired
     private CodeSummarizationService codeSummarizationService;
+
+    @Autowired
+    private SystemContextBuilderService systemContextBuilderService;
 
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> uploadFiles(@RequestParam("files") MultipartFile[] files) {
@@ -57,12 +62,15 @@ public class SystemAnalysisController {
                 codeSummary = codeSummarizationService.summarize(results, path);
                 System.out.println("codeSummary" + codeSummary);
             }
+            SystemContext systemContext = systemContextBuilderService.buildContext(codeSummary);
+            System.out.println(systemContext);
 
             if (results.size() == 1) {
                 return ResponseEntity.ok(results.get(0));
             }
             else {
-                return ResponseEntity.ok(codeSummary);
+
+                return ResponseEntity.ok(systemContext);
             }
 
         } catch (Exception e) {
